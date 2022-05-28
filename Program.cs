@@ -22,9 +22,10 @@ public class SimpleContainer
         }
     }
 
-    public void RegisterType<From, To>(bool Singleton) where To : From
+    public void RegisterType<From, To>(bool Singleton) where To : class, From
     {
         this._specification[typeof(From)] = typeof(To);
+        this.RegisterType<To>(Singleton);
     }
 
     public T Resolve<T>() where T: class
