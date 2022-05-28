@@ -1,86 +1,71 @@
-﻿
-
-internal class DAG<N> where N : notnull
-{
-    private Dictionary<N, List<N>> _adjacency_list = new Dictionary<N, List<N>>();
-
-    public DAG() {
-        
-    }
-
-    public void AddNode(N node)
-    {
-        if (!this._adjacency_list.ContainsKey(node))
-        {
-            this._adjacency_list.Add(node, new List<N>());
-        }
-    }
-
-    public void AddEdge(N source, N destination)
-    {
-        if (!this._adjacency_list.ContainsKey(source))
-        {
-            throw new ArgumentException("source node is not in the graph.");
-        }
-        if (!this._adjacency_list.ContainsKey(destination))
-        {
-            throw new ArgumentException("destincation node is not in the graph.");
-        }
-        this._adjacency_list[source].Add(destination);
-        if (this.ContainsCycle())
-        {
-            this._adjacency_list[source].Remove(destination);
-            throw new ArgumentException("specified edge violates DAG invariant by creating a cycle.");
-        }
-    }
-
-    private bool ContainsCycle()
-    {
-        // dfs (from the root?)
-        throw new NotImplementedException();
-    }
-}
-
+﻿using System.Reflection;
 
 public class SimpleContainer
 {
-    private static List<Type> _singletons = new List<Type>();
+    /// <summary>
+    /// Registry of Types that should have a static lifetime policy.
+    /// </summary>
+    private Dictionary<Type, object> _singletons = new Dictionary<Type, object>();
+
+    /// <summary>
+    /// Registry of Types that should be returned when a given Abstact class or Interface instance is requested.
+    /// </summary>
     private Dictionary<Type, Type> _specification = new Dictionary<Type, Type>();
 
-    private DAG<Type> _dependency_graph = new DAG<Type>();
+    private Dictionary<Type, ConstructorInfo> _constructor_cache = new Dictionary<Type, ConstructorInfo>();
 
     public void RegisterType<T>(bool Singleton) where T : class
     {
         if (Singleton)
         {
-
+            this._singletons[typeof(T)] = this.Resolve<T>();
         }
     }
 
     public void RegisterType<From, To>(bool Singleton) where To : From
     {
-        
+        this._specification[typeof(From)] = typeof(To);
     }
 
-    private void AddTypeDependency<T>() where T : class
+    public T Resolve<T>() where T: class
     {
-        try
-        {
+        Type type = typeof(T);
 
-        }
-        catch(ArgumentException err)
+        if (this._constructor_cache.ContainsKey(type))
         {
-            // we're only interested in cycle prevention case if node is not added just add it.
+            return (T)this._constructor_cache[type].Invoke(null);
         }
-    }
-
-    /* 
-     * Error conditions:
-     *  - no zero argument contructor
-     *  - 
-     * */
-    public T Resolve<T>()
-    {
-        /* bottom up traversal of _dependency_graph for T */
+        if (type.IsInterface || type.IsAbstract)
+        {
+            if (this._specification.ContainsKey(type))
+            {
+                var result = typeof(SimpleContainer)?
+                    .GetMethod("Resolve")?
+                    .MakeGenericMethod(this._specification[type])
+                    .Invoke(null, null);
+                return result is not null ? (T)result : throw new Exception("invalid method configuration.");
+            }
+            else
+            {
+                throw new ArgumentException("specified abstract class/interface does not have a concrete type associated with it.");
+            }   
+        }    
+        else if (this._singletons.ContainsKey(type))
+        {
+            return (T)this._singletons[type];
+        } 
+        else
+        {
+            ConstructorInfo? constructor = type.GetConstructor(new Type[] { });
+            if (constructor is not null)
+            {
+                this._constructor_cache.Add(type, constructor);
+                return (T)this._constructor_cache[type].Invoke(null);
+            }
+            else
+            {
+                throw new ArgumentException("type specified does not have a default constructor.");
+            }
+        }
     }
 }
