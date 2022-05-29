@@ -54,15 +54,14 @@ namespace zadanie1.Tests
             Assert.IsNotNull(returnedType2);
             Assert.IsInstanceOfType(returnedType, typeof(Tested));
             Assert.IsInstanceOfType(returnedType, typeof(Tested));
-            Assert.IsFalse(returnedType.Equals(returnedType2));
-            Assert.Equals(returnedType, returnedType2);
+            Assert.IsTrue(returnedType.Equals(returnedType2));
         }
 
         [TestMethod]
         public void ResolveImplementationWithoutSingleton()
         {
             SimpleContainer container = new SimpleContainer();
-            container.RegisterType<ITested, Tested>(true);
+            container.RegisterType<ITested, Tested>(false);
 
             Tested? returnedType = container.Resolve<ITested>() as Tested;
             Tested? returnedType2 = container.Resolve<ITested>() as Tested;
@@ -97,7 +96,7 @@ namespace zadanie1.Tests
             Assert.IsNotNull(returnedType);
             Assert.IsNotNull(returnedType2);
             Assert.IsInstanceOfType(returnedType, typeof(Tested));
-            Assert.IsInstanceOfType(returnedType, typeof(Tested2));
+            Assert.IsInstanceOfType(returnedType2, typeof(Tested2));
         }
     }
 }

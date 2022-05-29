@@ -23,7 +23,10 @@ namespace zadanie1
         {
             if (Singleton)
             {
-                this._singletons[typeof(T)] = this.Resolve<T>();
+                if (!this._singletons.ContainsKey(typeof(T)))
+                {
+                    this._singletons[typeof(T)] = this.Resolve<T>();
+                }
             }
         }
 
@@ -36,7 +39,10 @@ namespace zadanie1
         public T Resolve<T>() where T : class
         {
             Type type = typeof(T);
-
+            if (this._singletons.ContainsKey(type))
+            {
+                return (T)this._singletons[type];
+            }
             if (this._constructor_cache.ContainsKey(type))
             {
                 return (T)this._constructor_cache[type].Invoke(null);
@@ -48,17 +54,13 @@ namespace zadanie1
                     var result = typeof(SimpleContainer)?
                         .GetMethod("Resolve")?
                         .MakeGenericMethod(this._specification[type])
-                        .Invoke(null, null);
+                        .Invoke(this, null);
                     return result is not null ? (T)result : throw new Exception("invalid method configuration.");
                 }
                 else
                 {
                     throw new ArgumentException("specified abstract class/interface does not have a concrete type associated with it.");
                 }
-            }
-            else if (this._singletons.ContainsKey(type))
-            {
-                return (T)this._singletons[type];
             }
             else
             {
