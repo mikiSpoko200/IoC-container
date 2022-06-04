@@ -6,21 +6,38 @@ using System.Threading.Tasks;
 
 namespace zadanie1
 {
+    public class InvalidEdgeException<N> : Exception
+    {
+        N vertex;
 
-    internal class Dag<N> where N : notnull
+        public InvalidEdgeException(N vertex) : base($"Vertex {vertex} is not present in the graph.")
+        {
+            this.vertex = vertex;
+        }
+    }
+
+    public class CycleDetectedException<N> : Exception
+    {
+        N source;
+        N destination;
+        public CycleDetectedException(N source, N destination) 
+            : base($"Dag invariant was violated, addition of edge ({source}, {destination}) would create a cycle.") 
+        { 
+            this.source = source;
+            this.destination = destination;
+        }
+    }
+
+
+    public class Dag<N> where N : notnull
     {
         private Dictionary<N, List<N>> _adjacencyList = new Dictionary<N, List<N>>();
 
-        public Dag()
+        public void AddVertex(N vertex)
         {
-            throw new NotImplementedException();
-        }
-
-        public void AddNode(N node)
-        {
-            if (!this._adjacencyList.ContainsKey(node))
+            if (!this._adjacencyList.ContainsKey(vertex))
             {
-                this._adjacencyList.Add(node, new List<N>());
+                this._adjacencyList.Add(vertex, new List<N>());
             }
         }
 
@@ -33,17 +50,17 @@ namespace zadanie1
         {
             if (!this._adjacencyList.ContainsKey(source))
             {
-                throw new ArgumentException("source node is not in the graph.");
+                throw new InvalidEdgeException<N>(source);
             }
             if (!this._adjacencyList.ContainsKey(destination))
             {
-                throw new ArgumentException("destination node is not in the graph.");
+                throw new InvalidEdgeException<N>(destination);
             }
             this._adjacencyList[source].Add(destination);
             if (this.ContainsCycle())
             {
                 this._adjacencyList[source].Remove(destination);
-                throw new ArgumentException("specified edge violates DAG invariant by creating a cycle.");
+                throw new CycleDetectedException<N>(source, destination);
             }
         }
         enum Color
