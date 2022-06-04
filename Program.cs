@@ -4,7 +4,6 @@ using System.Reflection;
 
 namespace zadanie1
 {
-
     public class SimpleContainer
     {
         /// <summary>
@@ -17,10 +16,41 @@ namespace zadanie1
         /// </summary>
         private Dictionary<Type, Type> _specification = new Dictionary<Type, Type>();
 
-        private Dictionary<Type, ConstructorInfo> _constructor_cache = new Dictionary<Type, ConstructorInfo>();
+        private Dictionary<Type, ConstructorInfo> _constructorCache = new Dictionary<Type, ConstructorInfo>();
+
+        private Dag<Type> _dependencyResolutionGraph = new Dag<Type> { };
+
+        private ConstructorInfo GetConstructor()
+        {
+            throw new NotImplementedException();
+        }
 
         public void RegisterType<T>(bool Singleton) where T : class
         {
+            /*
+             * 1. get type of T
+             * 2. Consider special cases
+             * 
+             * GetConstructor(type t):
+             *      var constructor = ... GetMarkedConst ...
+             *      if marked_const is null:
+             *          constructor = ... GetConstructorFallback ...
+             *      return constructor
+             *      
+             *      
+             *     
+             * RegisterType(type t
+             *      
+             *      this._dependencyResolutionGraph.AddVertex(t)
+             *      var tConstructor = GetConstructor(t);
+             *      for argType in .ArgsList():
+             *          args.Push(RegisterType<argType>( ??? ))
+             *          this._dependencyResolutionGraph.AddEdge(t, argType)
+             *      this._constructorCache.Add(t, tConstructor
+             *      
+             * RegisterInstance<Foo>
+             * Resolve<Bar> where Bar(Foo)?
+             */
             if (Singleton)
             {
                 if (!this._singletons.ContainsKey(typeof(T)))
@@ -38,15 +68,27 @@ namespace zadanie1
 
         public T Resolve<T>() where T : class
         {
+            /*
+             * if (IsSpecialCase(t)):
+             *      this._specialCaseHandlers(t).Handle(t)
+             *      for now just make HandleSingleton, HandleSpecification, HandleInstance
+             * else:
+             *      if (!IsRegistered(t)):
+             *          # problem 
+             *          # RegisterType<Foo>(true) <- singleton
+             *          # RegisterType<Bar>(false) where Bar(Foo)
+             *          #
+             *          Register(t)
+             *      At This point ALL types that t possibly depends on are registered.
+             *      ... construct from dependency graph ...
+             */
+            object? obj = null;
             Type type = typeof(T);
             if (this._singletons.ContainsKey(type))
             {
                 return (T)this._singletons[type];
             }
-            if (this._constructor_cache.ContainsKey(type))
-            {
-                return (T)this._constructor_cache[type].Invoke(null);
-            }
+            // if (this._instances.ContainsKet(type))
             if (type.IsInterface || type.IsAbstract)
             {
                 if (this._specification.ContainsKey(type))
@@ -64,18 +106,21 @@ namespace zadanie1
             }
             else
             {
-                ConstructorInfo? constructor = type.GetConstructor(new Type[] { });
-                if (constructor is not null)
+                // if (!IsRegistered()) register
+                // Recursive Resolve 
+                ConstructorInfo constructor = this._constructorCache[type];
+                List<object> args = new List<object>();
+                foreach (Type dependecy in this._dependencyResolutionGraph.Children(type))
                 {
-                    this._constructor_cache.Add(type, constructor);
-                    return (T)this._constructor_cache[type].Invoke(null);
+                    // invoke Resolve for typeof(dependecy) and add result to args
                 }
-                else
-                {
-                    throw new ArgumentException("type specified does not have a default constructor.");
-                }
+                obj = constructor.Invoke(null, args.ToArray());
             }
+            if (obj is null)
+            {
+                // throw implementation incorrect exception
+            }
+            return (T)obj;
         }
     }
-
 }

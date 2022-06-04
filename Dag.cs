@@ -41,7 +41,7 @@ namespace zadanie1
             }
         }
 
-        private IReadOnlyCollection<N> Children(N parent)
+        public IReadOnlyCollection<N> Children(N parent)
         {
             return this._adjacencyList[parent].AsReadOnly();
         }
