@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace zadanie1
 {
+
     internal class Dag<N> where N : notnull
     {
-        private Dictionary<N, List<N>> _adjacency_list = new Dictionary<N, List<N>>();
+        private Dictionary<N, List<N>> _adjacencyList = new Dictionary<N, List<N>>();
 
         public Dag()
         {
@@ -17,30 +18,34 @@ namespace zadanie1
 
         public void AddNode(N node)
         {
-            if (!this._adjacency_list.ContainsKey(node))
+            if (!this._adjacencyList.ContainsKey(node))
             {
-                this._adjacency_list.Add(node, new List<N>());
+                this._adjacencyList.Add(node, new List<N>());
             }
+        }
+
+        private IReadOnlyCollection<N> Children(N parent)
+        {
+            return this._adjacencyList[parent].AsReadOnly();
         }
 
         public void AddEdge(N source, N destination)
         {
-            if (!this._adjacency_list.ContainsKey(source))
+            if (!this._adjacencyList.ContainsKey(source))
             {
                 throw new ArgumentException("source node is not in the graph.");
             }
-            if (!this._adjacency_list.ContainsKey(destination))
+            if (!this._adjacencyList.ContainsKey(destination))
             {
-                throw new ArgumentException("destincation node is not in the graph.");
+                throw new ArgumentException("destination node is not in the graph.");
             }
-            this._adjacency_list[source].Add(destination);
+            this._adjacencyList[source].Add(destination);
             if (this.ContainsCycle())
             {
-                this._adjacency_list[source].Remove(destination);
+                this._adjacencyList[source].Remove(destination);
                 throw new ArgumentException("specified edge violates DAG invariant by creating a cycle.");
             }
         }
-
         enum Color
         {
             White,
@@ -48,37 +53,55 @@ namespace zadanie1
             Black,
         }
 
-        private bool ContainsCycle()
+        /// <summary>
+        /// Recursive helper function for ContainsCycle().
+        /// </summary>
+        /// <param name="node"> A root node for DFS traversal. It must have a White Color associated with it in coloring. </param>
+        /// <param name="coloring"> Association between Nodes of the Dag and their Color in Three Color DFS algorithm. </param>
+        /// <returns> Determines if the Dag contains any cycles </returns>
+        private bool ColoringDfsHelper(N node, Dictionary<N, Color> coloring)
         {
-            if (this._adjacency_list.Count > 0)
+            coloring[node] = Color.Grey;
+            foreach (N child in Children(node))
             {
-                Dictionary<N, Color> coloring = new Dictionary<N, Color>();
-                Stack<N> search_stack = new Stack<N>();
-                search_stack.Push(this._adjacency_list.Keys.First());
-                foreach (N node in this._adjacency_list.Keys)
+                if (coloring[child] == Color.Grey)
                 {
-                    coloring.Add(node, Color.White);
+                    return true;
                 }
-
-                while (search_stack.Count > 0)
+                if (coloring[child] == Color.White)
                 {
-                    N current_node = search_stack.Pop();
-                    coloring[current_node] = Color.Grey;
-                    foreach (N child in this._adjacency_list[current_node])
+                    bool backedgeExists = ColoringDfsHelper(child, coloring);
+                    // If back-edge was found bubble up result else continue traversal
+                    if (backedgeExists)
                     {
-                        if (coloring[child] == Color.Grey)
-                        {
-                            return true;
-                        }
-                        if (coloring[child] == Color.White)
-                        {
-
-                        }
+                        return true;
                     }
                 }
-
             }
+            // If all descending paths were explored and no back-egdes were found then mark node as black
+            coloring[node] = Color.Black;
+            return false;
+        }
 
+        /// <summary>
+        /// Checks if any cycles are present in current configuration of the graph.
+        /// </summary>
+        /// <returns> Boolean value determining if any cycles are present in current configuration of the graph. </returns>
+        private bool ContainsCycle()
+        {
+            var coloring = new Dictionary<N, Color>();
+            foreach (N node in this._adjacencyList.Keys)
+            {
+                coloring.Add(node, Color.White);
+            }
+            foreach (N node in this._adjacencyList.Keys)
+            {
+                bool backedgeExists = ColoringDfsHelper(node, coloring);
+                if (backedgeExists)
+                {
+                    return true;
+                }
+            }
             return false;
         }
     }
