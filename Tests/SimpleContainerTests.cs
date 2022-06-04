@@ -98,5 +98,40 @@ namespace zadanie1.Tests
             Assert.IsInstanceOfType(returnedType, typeof(Tested));
             Assert.IsInstanceOfType(returnedType2, typeof(Tested2));
         }
+
+        [TestMethod]
+        public void ResolveRegisteredInstance()
+        {
+            SimpleContainer container = new SimpleContainer();
+            Tested tested = new Tested();
+
+            container.RegisterInstance<Tested>(tested);
+            Assert.AreEqual(tested, container.Resolve<Tested>());
+        }
+
+        [TestMethod]
+        public void ResolveNotRegisteredInstance()
+        {
+            SimpleContainer container = new SimpleContainer();
+            Tested tested = new Tested();
+
+            Assert.AreNotEqual(tested, container.Resolve<Tested>());
+        }
+
+        [TestMethod]
+        public void ResolveRegisteredInstanceChange()
+        {
+            SimpleContainer container = new SimpleContainer();
+            Tested tested = new Tested();
+            Tested2 tested2 = new Tested2();
+
+            container.RegisterType<ITested, Tested>(false);
+            container.RegisterInstance<ITested>(tested);
+            Assert.AreEqual(tested, container.Resolve<ITested>());
+
+            container.RegisterType<ITested, Tested2>(false);
+            container.RegisterInstance<ITested>(tested2);
+            Assert.AreEqual(tested2, container.Resolve<ITested>());
+        }
     }
 }
