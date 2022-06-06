@@ -70,14 +70,12 @@ namespace zadanie1
                 .Select(p => p.ParameterType);
         }
 
+        private bool IsRegistered(Type type) {
+            return this._constructorCache.ContainsKey(type);
+        }
+
         private class ResolverTemporaryStubType { }
 
-        /// <summary>
-        /// 
-        ///
-        ///
-        ///
-        ///
         private void RegisterTypeDependencies(Type type)
         {
             List<Type> addedTypes = new List<Type>();
@@ -144,24 +142,20 @@ namespace zadanie1
             this._instances[typeof(T)] = instance;
         }
 
-        public T Resolve<T>() where T : class
+        private object ResolveType(Type type)
         {
-            /*
-             * if (IsSpecialCase(t)):
-             *      this._specialCaseHandlers(t).Handle(t)
-             *      for now just make HandleSingleton, HandleSpecification, HandleInstance
-             * else:
-             *      if (!IsRegistered(t)):
-             *          # problem 
-             *          # RegisterType<Foo>(true) <- singleton
-             *          # RegisterType<Bar>(false) where Bar(Foo)
-             *          #
-             *          Register(t)
-             *      At This point ALL types that t possibly depends on are registered.
-             *      ... construct from dependency graph ...
-             */
-            object? obj = null;
+            var result = typeof(SimpleContainer)?
+                .GetMethod("Resolve")?
+                .MakeGenericMethod(this._specification[type])
+                .Invoke(this, null);
+            return result is not null ? result : throw new Exception("invalid dependency resolution method name");
+        }
+
+        public T Resolve<T>() where T : class
+        {   
             Type type = typeof(T);
+            
+            #region Special cases
             if (this._singletons.ContainsKey(type))
             {
                 return (T)this._singletons[type];
@@ -170,39 +164,38 @@ namespace zadanie1
             {
                 return (T)this._instances[type];
             }
-            // if (this._instances.ContainsKet(type))
             if (type.IsInterface || type.IsAbstract)
             {
                 if (this._specification.ContainsKey(type))
                 {
-                    var result = typeof(SimpleContainer)?
-                        .GetMethod("Resolve")?
-                        .MakeGenericMethod(this._specification[type])
-                        .Invoke(this, null);
-                    return result is not null ? (T)result : throw new Exception("invalid method configuration.");
+                    return (T) this.ResolveType(this._specification[type]);
                 }
                 else
                 {
                     throw new ArgumentException("specified abstract class/interface does not have a concrete type associated with it.");
                 }
             }
-            else
-            {
-                // if (!IsRegistered()) register
-                // Recursive Resolve
+            #endregion
+            else {
+                if (!this.IsRegistered(type))
+                {
+                    // at this point type is definitely not a singleton
+                    this.RegisterTypeDependencies(type);
+                }
+                
                 ConstructorInfo constructor = this._constructorCache[type];
                 List<object> args = new List<object>();
-                foreach (Type dependecy in this._dependencyResolutionGraph.Children(type))
+                foreach (Type childType in this._dependencyResolutionGraph.Children(type))
                 {
-                    // invoke Resolve for typeof(dependecy) and add result to args
+                    args.Add((T)this.ResolveType(childType));
                 }
-                obj = constructor.Invoke(null, args.ToArray());
+                var result = constructor.Invoke(null, args.ToArray());
+                if (result is null)
+                {
+                    throw new Exception("implementation is invalid.");
+                }
+                return (T)result;
             }
-            if (obj is null)
-            {
-                // throw implementation incorrect exception
-            }
-            return (T)obj;
         }
     }
 }
