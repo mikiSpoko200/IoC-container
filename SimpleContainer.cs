@@ -44,7 +44,7 @@ namespace zadanie1
             {
                 throw new Exception("There is more than one constructor marked with DependencyConstructor");
             }
-            if(attributedConstructors.Length == 0)
+            if(attributedConstructors.Length == 1)
             {
                 return attributedConstructors.First();
             }
