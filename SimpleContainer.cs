@@ -63,32 +63,66 @@ namespace zadanie1
             return maxParamsConstructor;
         }
 
+        private IEnumerable<Type> GetParameterTypes(ConstructorInfo constructor)
+        {
+            return constructor.GetParameters()
+                .AsEnumerable()
+                .Select(p => p.ParameterType);
+        }
+
+        private class ResolverTemporaryStubType { }
+
+        /// <summary>
+        /// 
+        ///
+        ///
+        ///
+        ///
+        private void RegisterTypeDependencies(Type type)
+        {
+            List<Type> addedTypes = new List<Type>();
+            var unresolvedTypes = new Stack<(Type, Type)>();
+            
+            // temporary internal stub type removed at the end, makes code in the loop below cleaner.
+            Type temp = typeof(ResolverTemporaryStubType);
+            unresolvedTypes.Push((type, temp));
+            this._dependencyResolutionGraph.AddVertex(temp);
+
+            // loop invariant: parentType is in the graph
+            while(unresolvedTypes.Count > 0)
+            {
+                var (childType, parentType) = unresolvedTypes.Pop();
+                if (!this._dependencyResolutionGraph.ContainsVertex(childType))
+                {
+                    ConstructorInfo constructor = this.GetConstructor(childType);
+
+                    foreach(var grandChildType in this.GetParameterTypes(constructor))
+                    {
+                        unresolvedTypes.Push((grandChildType, childType));
+                    }
+
+                    this._dependencyResolutionGraph.AddVertex(childType);
+                    addedTypes.Add(childType);
+                    try
+                    {
+                        this._dependencyResolutionGraph.AddEdge(parentType, childType);
+                    }
+                    catch (CycleDetectedException<Type>)
+                    {
+                        // clean up all newly added vertices.
+                        addedTypes.ForEach(type => this._dependencyResolutionGraph.DeleteSource(type));
+                        throw;
+                    }
+                    // if no cycle was created cache constructor for parent type.
+                    this._constructorCache.Add(childType, constructor);
+                }
+            }
+            this._dependencyResolutionGraph.DeleteSource(temp);
+        }
+
         public void RegisterType<T>(bool Singleton) where T : class
         {
-            /*
-             * 1. get type of T
-             * 2. Consider special cases
-             * 
-             * GetConstructor(type t):
-             *      var constructor = ... GetMarkedConst ...
-             *      if marked_const is null:
-             *          constructor = ... GetConstructorFallback ...
-             *      return constructor
-             *      
-             *      
-             *     
-             * RegisterType(type t
-             *      
-             *      this._dependencyResolutionGraph.AddVertex(t)
-             *      var tConstructor = GetConstructor(t);
-             *      for argType in .ArgsList():
-             *          args.Push(RegisterType<argType>( ??? ))
-             *          this._dependencyResolutionGraph.AddEdge(t, argType)
-             *      this._constructorCache.Add(t, tConstructor
-             *      
-             * RegisterInstance<Foo>
-             * Resolve<Bar> where Bar(Foo)?
-             */
+            this.RegisterTypeDependencies(typeof(T));
             if (Singleton)
             {
                 if (!this._singletons.ContainsKey(typeof(T)))
