@@ -139,7 +139,7 @@ namespace zadanie1
             this.RegisterType<To>(Singleton);
         }
 
-        public void RegisterInstance<T>(T instance)
+        public void RegisterInstance<T>(T instance) where T : class
         {
             this._instances[typeof(T)] = instance;
         }
