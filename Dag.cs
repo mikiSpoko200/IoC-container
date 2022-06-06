@@ -33,43 +33,6 @@ namespace zadanie1
     {
         private Dictionary<N, List<N>> _adjacencyList = new Dictionary<N, List<N>>();
 
-        public void AddVertex(N vertex)
-        {
-            if (!this._adjacencyList.ContainsKey(vertex))
-            {
-                this._adjacencyList.Add(vertex, new List<N>());
-            }
-        }
-
-        public IReadOnlyCollection<N> Children(N parent)
-        {
-            return this._adjacencyList[parent].AsReadOnly();
-        }
-
-        public void AddEdge(N source, N destination)
-        {
-            if (!this._adjacencyList.ContainsKey(source))
-            {
-                throw new InvalidEdgeException<N>(source);
-            }
-            if (!this._adjacencyList.ContainsKey(destination))
-            {
-                throw new InvalidEdgeException<N>(destination);
-            }
-            this._adjacencyList[source].Add(destination);
-            if (this.ContainsCycle())
-            {
-                this._adjacencyList[source].Remove(destination);
-                throw new CycleDetectedException<N>(source, destination);
-            }
-        }
-        enum Color
-        {
-            White,
-            Grey,
-            Black,
-        }
-
         /// <summary>
         /// Recursive helper function for ContainsCycle().
         /// </summary>
@@ -120,6 +83,49 @@ namespace zadanie1
                 }
             }
             return false;
+        }
+
+        public bool ContainsVertex(N vertex)
+        {
+            return this._adjacencyList.ContainsKey(vertex);
+        }
+
+        public void AddVertex(N vertex)
+        {
+            if (!this._adjacencyList.ContainsKey(vertex))
+            {
+                this._adjacencyList.Add(vertex, new List<N>());
+            }
+        }
+
+        public IReadOnlyCollection<N> Children(N parent)
+        {
+            return this._adjacencyList[parent].AsReadOnly();
+        }
+
+        public void AddEdge(N source, N destination)
+        {
+            if (!this._adjacencyList.ContainsKey(source))
+            {
+                throw new InvalidEdgeException<N>(source);
+            }
+            if (!this._adjacencyList.ContainsKey(destination))
+            {
+                throw new InvalidEdgeException<N>(destination);
+            }
+            this._adjacencyList[source].Add(destination);
+            if (this.ContainsCycle())
+            {
+                this._adjacencyList[source].Remove(destination);
+                throw new CycleDetectedException<N>(source, destination);
+            }
+        }
+
+        enum Color
+        {
+            White,
+            Grey,
+            Black,
         }
     }
 }
