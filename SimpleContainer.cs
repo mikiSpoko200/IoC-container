@@ -17,10 +17,19 @@ namespace zadanie1
         /// </summary>
         private Dictionary<Type, Type> _specification = new Dictionary<Type, Type>();
 
+        /// <summary>
+        /// Registry of externally created objects that should be returned when type is requested.
+        /// <summary
         private Dictionary<Type, object> _instances = new Dictionary<Type, object>();
-
+        
+        /// <summary>
+        /// Association of type and the corresponding constructor that should be invoked upon creation.
+        /// <summary>
         private Dictionary<Type, ConstructorInfo> _constructorCache = new Dictionary<Type, ConstructorInfo>();
 
+        /// <summary>
+        /// Graph of dependencies between types.
+        /// <summary>
         private Dag<Type> _dependencyResolutionGraph = new Dag<Type> { };
 
         private ConstructorInfo GetConstructor(Type type)
