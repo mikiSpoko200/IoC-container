@@ -36,13 +36,13 @@ namespace zadanie1
         /// <summary>
         /// Recursive helper function for ContainsCycle().
         /// </summary>
-        /// <param name="node"> A root node for DFS traversal. It must have a White Color associated with it in coloring. </param>
-        /// <param name="coloring"> Association between Nodes of the Dag and their Color in Three Color DFS algorithm. </param>
+        /// <param name="vertex"> A root vertex for DFS traversal. It must have a White Color associated with it in coloring. </param>
+        /// <param name="coloring"> Association between vertices of the Dag and their Color in Three Color DFS algorithm. </param>
         /// <returns> Determines if the Dag contains any cycles </returns>
-        private bool ColoringDfsHelper(N node, Dictionary<N, Color> coloring)
+        private bool ColoringDfsHelper(N vertex, Dictionary<N, Color> coloring)
         {
-            coloring[node] = Color.Grey;
-            foreach (N child in Children(node))
+            coloring[vertex] = Color.Grey;
+            foreach (N child in Children(vertex))
             {
                 if (coloring[child] == Color.Grey)
                 {
@@ -58,8 +58,8 @@ namespace zadanie1
                     }
                 }
             }
-            // If all descending paths were explored and no back-egdes were found then mark node as black
-            coloring[node] = Color.Black;
+            // If all descending paths were explored and no back-egdes were found then mark vertex as black
+            coloring[vertex] = Color.Black;
             return false;
         }
 
@@ -70,19 +70,28 @@ namespace zadanie1
         private bool ContainsCycle()
         {
             var coloring = new Dictionary<N, Color>();
-            foreach (N node in this._adjacencyList.Keys)
+            foreach (N vertex in this._adjacencyList.Keys)
             {
-                coloring.Add(node, Color.White);
+                coloring.Add(vertex, Color.White);
             }
-            foreach (N node in this._adjacencyList.Keys)
+            foreach (N vertex in this._adjacencyList.Keys)
             {
-                bool backedgeExists = ColoringDfsHelper(node, coloring);
+                bool backedgeExists = ColoringDfsHelper(vertex, coloring);
                 if (backedgeExists)
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Removes a source vertex from the graph. No check is performed to verify if given vertex actually is a source.
+        /// Removal of non source vertex with this method will result in stale references in neighbour lists.
+        /// <summary>
+        public void DeleteSource(N source)
+        {
+            this._adjacencyList.Remove(source);
         }
 
         public bool ContainsVertex(N vertex)
@@ -92,7 +101,7 @@ namespace zadanie1
 
         public void AddVertex(N vertex)
         {
-            if (!this._adjacencyList.ContainsKey(vertex))
+            if (!this.ContainsVertex(vertex))
             {
                 this._adjacencyList.Add(vertex, new List<N>());
             }
@@ -105,11 +114,11 @@ namespace zadanie1
 
         public void AddEdge(N source, N destination)
         {
-            if (!this._adjacencyList.ContainsKey(source))
+            if (!this.ContainsVertex(source))
             {
                 throw new InvalidEdgeException<N>(source);
             }
-            if (!this._adjacencyList.ContainsKey(destination))
+            if (!this.ContainsVertex(destination))
             {
                 throw new InvalidEdgeException<N>(destination);
             }
