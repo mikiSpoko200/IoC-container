@@ -37,7 +37,7 @@ namespace zadanie1
             ConstructorInfo[] constructors = type.GetConstructors();
             ConstructorInfo[] attributedConstructors = 
                 constructors.AsEnumerable()
-                .Where(constructor => !(constructor.GetCustomAttribute(typeof(DependencyConstrutor)) is null))
+                .Where(constructor => !(constructor.GetCustomAttribute(typeof(DependencyConstructor)) is null))
                 .ToArray();
 
             if(attributedConstructors.Length > 1)
@@ -120,7 +120,10 @@ namespace zadanie1
 
         public void RegisterType<T>(bool Singleton) where T : class
         {
-            this.RegisterTypeDependencies(typeof(T));
+            if(!(typeof(T).IsInterface || typeof(T).IsAbstract))
+            {
+                this.RegisterTypeDependencies(typeof(T));
+            }
             if (Singleton)
             {
                 if (!this._singletons.ContainsKey(typeof(T)))
@@ -138,7 +141,7 @@ namespace zadanie1
         }
 
         public void RegisterInstance<T>(T instance) where T : class
-        {
+        { //!
             this._instances[typeof(T)] = instance;
         }
 
@@ -146,7 +149,7 @@ namespace zadanie1
         {
             var result = typeof(SimpleContainer)?
                 .GetMethod("Resolve")?
-                .MakeGenericMethod(this._specification[type])
+                .MakeGenericMethod(type)
                 .Invoke(this, null);
             return result is not null ? result : throw new Exception("invalid dependency resolution method name");
         }
@@ -189,7 +192,7 @@ namespace zadanie1
                 {
                     args.Add((T)this.ResolveType(childType));
                 }
-                var result = constructor.Invoke(null, args.ToArray());
+                var result = constructor.Invoke(args.ToArray());
                 if (result is null)
                 {
                     throw new Exception("implementation is invalid.");

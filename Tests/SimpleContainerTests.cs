@@ -7,7 +7,7 @@ namespace zadanie1.Tests
     public class SimpleContainerTests
     {
         [TestMethod]
-        public void RegisterSingletonTrue()
+        public void ResolveSingletonTrue()
         {
             SimpleContainer container = new SimpleContainer();
             container.RegisterType<SimpleContainerType>(true);
