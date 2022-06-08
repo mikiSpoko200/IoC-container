@@ -133,5 +133,14 @@ namespace zadanie1.Tests
             container.RegisterInstance<ITested>(tested2);
             Assert.AreEqual(tested2, container.Resolve<ITested>());
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), "Class with multiple attributed constructors was inappropriately allowed.")]
+        public void ResolveMultipleAttributedConstructorExplicitRegistration()
+        {
+            SimpleContainer container = new SimpleContainer();
+            Tested3 tested = new Tested3();
+            container.RegisterInstance<Tested3>(tested);
+        }
     }
 }

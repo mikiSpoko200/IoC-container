@@ -13,7 +13,7 @@ namespace zadanie1
         private Dictionary<Type, object> _singletons = new Dictionary<Type, object>();
 
         /// <summary>
-        /// Registry of Types that should be returned when a given Abstact class or Interface instance is requested.
+        /// Registry of Types that should be returned when a given Abstract class or Interface instance is requested.
         /// </summary>
         private Dictionary<Type, Type> _specification = new Dictionary<Type, Type>();
 

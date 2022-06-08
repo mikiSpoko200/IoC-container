@@ -20,4 +20,13 @@ namespace zadanie1.Tests
 
     public class Tested2 : ITested
     { }
+
+    public class Tested3
+    {
+        [DependencyConstructor]
+        public Tested3(int a) { }
+
+        [DependencyConstructor]
+        public Tested3(float b) { }
+    }
 }
