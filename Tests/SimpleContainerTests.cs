@@ -133,5 +133,13 @@ namespace zadanie1.Tests
             container.RegisterInstance<ITested>(tested2);
             Assert.AreEqual(tested2, container.Resolve<ITested>());
         }
+
+        [TestMethod]
+        public void ResolveRegisterInstanceUserDefinedConstructor()
+        {
+            SimpleContainer container = new SimpleContainer();
+            A a = container.Resolve<A>();
+            Assert.IsNotNull(a.b);
+        }
     }
 }

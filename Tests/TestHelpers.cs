@@ -20,4 +20,14 @@ namespace zadanie1.Tests
 
     public class Tested2 : ITested
     { }
+
+    public class A
+    {
+        public B b;
+        public A(B b)
+        {
+            this.b = b;
+        }
+    }
+    public class B { }
 }
