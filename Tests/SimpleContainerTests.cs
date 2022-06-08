@@ -135,6 +135,14 @@ namespace zadanie1.Tests
         }
 
         [TestMethod]
+        public void ResolveRegisterInstanceUserDefinedConstructor()
+        {
+            SimpleContainer container = new SimpleContainer();
+            A a = container.Resolve<A>();
+            Assert.IsNotNull(a.b);
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(Exception), "Class with multiple attributed constructors was inappropriately allowed.")]
         public void ResolveMultipleAttributedConstructorExplicitRegistration()
         {

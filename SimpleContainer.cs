@@ -190,7 +190,7 @@ namespace zadanie1
                 List<object> args = new List<object>();
                 foreach (Type childType in this._dependencyResolutionGraph.Children(type))
                 {
-                    args.Add((T)this.ResolveType(childType));
+                    args.Add(this.ResolveType(childType));
                 }
                 var result = constructor.Invoke(args.ToArray());
                 if (result is null)
