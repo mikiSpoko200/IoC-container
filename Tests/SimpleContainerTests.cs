@@ -144,11 +144,10 @@ namespace zadanie1.Tests
 
         [TestMethod]
         [ExpectedException(typeof(Exception), "Class with multiple attributed constructors was inappropriately allowed.")]
-        public void ResolveMultipleAttributedConstructorExplicitRegistration()
+        public void ResolveMultipleAttributedConstructorRegistration()
         {
             SimpleContainer container = new SimpleContainer();
-            Tested3 tested = new Tested3();
-            container.RegisterInstance<Tested3>(tested);
+            container.RegisterType<Tested3>(false);
         }
     }
 }
